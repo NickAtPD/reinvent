@@ -22,7 +22,7 @@
     },
     "source": "argocd/reinvent-kind",
     "summary": "Deployed scheduling v3.8.2 to reinvent-kind/healthcare: booking slot cache TTL 30s → 60s (config only)",
-    "timestamp": "2026-11-13T05:56:41Z"
+    "timestamp": "2026-11-16T15:51:43Z"
   },
   "routing_key": "YOUR_SCHEDULING_CHANGE_KEY"
 }

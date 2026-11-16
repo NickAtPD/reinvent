@@ -179,7 +179,16 @@ post() { printf '%%-50s ' "$2"; curl -sS -X POST "$URL$1" -H 'Content-Type: appl
 - **Timestamps.** Alerts have none, so PagerDuty uses the time it receives them. Change events keep a timestamp backdated from the export time; re-export for a fresh one.
 - **Resolve** files are the full alert with ` + "`event_action: resolve`" + `, so dynamic routing takes them to the same service.
 - Every alert carries ` + "`custom_details.service`" + `, which the orchestration routes on and uses to add ` + "`custom_details.runbook.github`" + `.
+
+## Postman
+
+Import ` + "`" + postmanFile + "`" + ` (File → Import). It never contains keys: paste yours into the collection variables (each one says where to find it). Run the folder **1. Run the demo** with the Collection Runner: it keeps the demo's pacing and starts a new run ID, so every run opens fresh incidents and change events are timestamped at send time. Run **2. Resolve the demo** when you're done.
 `)
+	coll, err := postmanCollection(sc)
+	if err != nil {
+		return nil, err
+	}
+	files[postmanFile] = coll
 	files["send.sh"] = []byte(send.String())
 	files["resolve.sh"] = []byte(resolve.String())
 	files["README.md"] = []byte(readme.String())
