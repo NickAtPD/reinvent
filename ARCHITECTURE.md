@@ -65,7 +65,7 @@ Users are often non-technical. Every change to setup is judged against that:
 
 ## Kubernetes (not in the app for now)
 
-The user removed every cluster feature from the app (menu, status, `cluster` subcommand, kind/kubectl/Docker checks and downloads; `k8s/` is no longer embedded). The manifests stay in `k8s/`, and instructions/03 sets the cluster up by hand with `kind`/`kubectl`. Git history has the removed `app/cluster.go` (it always passed `--context kind-reinvent`) if it comes back.
+The user removed every cluster feature from the app (menu, status, `cluster` subcommand, kind/kubectl/Docker checks and downloads; `k8s/` is no longer embedded). The manifests stay in `k8s/`, and instructions/03 sets the cluster up by hand with `kind`/`kubectl` on plain Docker Engine (no Docker Desktop). That setup was verified on WSL2: the single-node cluster, the three `healthcare` deployments and `claims-toolbox` come up, `claims-reconciliation` leaks 5 MB every 10 s with no memory limit, and the toolbox service account can patch Deployments in `healthcare` only. Git history has the removed `app/cluster.go` (it always passed `--context kind-reinvent`) if it comes back.
 
 The runner (from the PD Automation Runner KB, not in this repo) keeps its read-mostly ClusterRole. The memory-limit patch runs via `pods/exec` into `claims-toolbox`, whose namespace-scoped SA alone may `patch` Deployments. Don't widen the runner's RBAC to remove that hop.
 
