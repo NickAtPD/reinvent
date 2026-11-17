@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -26,9 +25,9 @@ func cmdExport(args []string) error {
 	var c common
 	fs := flag.NewFlagSet("export", flag.ExitOnError)
 	c.register(fs, true)
-	dir := fs.String("dir", "", "output folder (default: payloads/rendered in a checkout, else ~/Desktop/Reinvent payloads)")
+	dir := fs.String("dir", "", "output folder (default: payloads/rendered in a checkout, else ~/.local/share/reinvent/exports)")
 	withKeys := fs.Bool("keys", false, "fill in this account's real routing keys instead of placeholders")
-	open := fs.Bool("open", false, "open the folder in Finder afterwards")
+	open := fs.Bool("open", false, "open the folder in Windows Explorer afterwards")
 	fs.Parse(args)
 	if err := c.resolveRoot(); err != nil {
 		return err
@@ -42,8 +41,11 @@ func cmdExport(args []string) error {
 		if isCheckout(c.root) && !*withKeys {
 			out = filepath.Join(c.root, "payloads", "rendered")
 		} else {
-			home, _ := os.UserHomeDir()
-			out = filepath.Join(home, "Desktop", "Reinvent payloads")
+			ws, err := workspaceDir()
+			if err != nil {
+				return err
+			}
+			out = filepath.Join(ws, "exports")
 		}
 	}
 
@@ -93,7 +95,7 @@ func cmdExport(args []string) error {
 		fmt.Println("These files contain your real routing keys. Don't share or commit them.")
 	}
 	if *open {
-		_ = exec.Command("open", out).Run()
+		_ = openTarget(out)
 	}
 	return nil
 }

@@ -22,13 +22,14 @@ cd app && go test -run TestPayloadsRender ./...     # one test
 
 ## Distribution
 
-Most users don't have a checkout. They install with `install.sh` (`curl … | sh`), which unpacks the release zip into `~/Applications/Reinvent.app` and opens it. Files fetched by curl aren't quarantined, which is why an unsigned app works this way. **This Mac has no Developer ID or notary profile**, so releases are ad-hoc signed. `scripts/release.sh` signs and notarises automatically if both ever appear.
+This fork is **WSL2-only** and has no installer or release artifacts: users clone it and run `./trigger`. (Upstream's macOS `.app`, `install.sh`, `scripts/release.sh` and Finder relaunch were removed.)
 
-- **One binary, two modes.** If walking up from the working directory finds `payloads/scenario.json`, the app uses the checkout (dev mode). Otherwise it uses the workspace `~/Library/Application Support/Reinvent`: `.env`, Terraform state and `tools/` live there.
+- **One binary, two modes.** If walking up from the working directory finds `payloads/scenario.json`, the app uses the checkout (dev mode). Otherwise it uses the workspace `~/.local/share/reinvent` (or `$XDG_DATA_HOME/reinvent`): `.env`, Terraform state, `tools/` and `exports/` live there.
 - **Embedded files:** `assets.go` (root package, which is why `go.mod` is at the repo root) embeds `payloads`, `runbook` and the Terraform files. On a version change they're re-extracted into the workspace (`app/workspace.go`), always for `dev` builds. `.env`, state and tools are never touched. A new file the app needs at run time must be added to the `//go:embed` line.
-- **Tools** (`app/tools.go`): Terraform is pinned and downloaded on first use from HashiCorp, checked against its SHA-256 file, and stored in `<workspace>/tools`. A copy on PATH wins.
-- **Finder launch** (`app/launch.go`): with no TTY, running from inside `.app`, it reopens itself with `open -a Terminal`.
-- **Releases:** `scripts/release.sh <ver>` builds a universal binary (`-X main.version`), creates the bundle and zip, then verifies a fresh copy from an empty `HOME` outside the checkout. `--publish` tags and runs `gh release create`; only use it when the user asks in that message. Releases are cut locally, never in CI. `githubRepo` in `app/workspace.go` and `REPO` in `install.sh` must match.
+- **Tools** (`app/tools.go`): Terraform is pinned and downloaded on first use (linux build) from HashiCorp, checked against its SHA-256 file, and stored in `<workspace>/tools`. A copy on PATH wins.
+- **Opening things** (`app/platform.go`): `openTarget` opens URLs and folders in the Windows host via `wslview`, else `explorer.exe` (folders converted with `wslpath -w`), else `xdg-open`.
+- **CI** (`.github/workflows/ci.yml`): `go vet`, `go test` and `terraform validate` on every push and PR. All offline; it needs no secrets.
+- `githubRepo` in `app/workspace.go` is the repo the setup-guide links point at.
 
 ## Setup must be idiot-proof (first rule)
 
@@ -49,7 +50,7 @@ Users are often non-technical. Every change to setup is judged against that:
 - **`resolve` and `destroy`** resolve by each alert payload's `dedup_key`. Keep the keys stable and non-empty.
 - **Payloads ↔ service EO rule:** `terraform/orchestration.tf` matches `(?i)kubernetes` in `event.summary` or `custom_details.platform == kubernetes`, and suppresses `severity == info`. The scenario mixes Kubernetes alerts with other tools' alerts (CloudWatch RDS, Splunk, Datadog Synthetics, the clearinghouse), which keep their own severity. `TestPayloadsRender` checks that a summary mentions Kubernetes **if and only if** `platform == kubernetes`.
 - **Template gotcha:** payloads are JSON, so a string argument inside `{{ }}` takes backticks, not escaped quotes: `{{ago `+"`44m`"+`}}`.
-- **`payloads/rendered/`** is generated, plain JSON for use outside this app (curl/Postman), plus `send.sh`, `resolve.sh` and `resolve/`. Placeholder keys only. `TestRenderedUpToDate` fails when it's stale; regenerate with `./trigger export`. Menu **e** (`export -keys -open`) writes a copy with the real keys, mode 600, to `~/Desktop/Reinvent payloads`. Alert timestamps are dropped there; change-event timestamps are backdated from export time.
+- **`payloads/rendered/`** is generated, plain JSON for use outside this app (curl/Postman), plus `send.sh`, `resolve.sh` and `resolve/`. Placeholder keys only. `TestRenderedUpToDate` fails when it's stale; regenerate with `./trigger export`. Menu **e** (`export -keys -open`) writes a copy with the real keys, mode 600, to `~/.local/share/reinvent/exports` (deliberately on the Linux filesystem: `/mnt/c` can't enforce permissions and a Windows Desktop may sync to OneDrive). Alert timestamps are dropped there; change-event timestamps are backdated from export time.
 - **Payloads ↔ cluster:** `vars.node`, `vars.namespace` and `vars.deployment` match `k8s/kind-config.yaml` (node `reinvent-control-plane`) and `k8s/healthcare.yaml` (namespace `healthcare`, label `app=claims-reconciliation`, container `app`). Change them together.
 - **Alert grouping is cross-service.** One `pagerduty_alert_grouping_setting` covers both technical services, so the scheduling alert can join the claims incident. It's `intelligent` with `iag_fields = ["source"]`: every alert sets `source` to the node name, the signal they share. Comparing on `summary` (the old default) grouped nothing. IAG learns, so a fresh account may not group the first run; `alert_grouping_type = "content_based"` (also on `source`) is the deterministic fallback.
 - **No automatic priority.** The service EO rule sets critical and an annotation only. P1 is set by the Major Incident workflow when a person declares it (the user's call: incidents shouldn't arrive as P1).

@@ -20,7 +20,7 @@ const usage = `usage: ./trigger              (opens the menu: start here)
 
 commands:
   setup     check or change region, API key and responder email
-  doctor    check this Mac: internet, PagerDuty settings, Terraform
+  doctor    check this machine: internet, PagerDuty settings, Terraform
   export    write every event as plain JSON + send.sh/resolve.sh (-keys for real keys)
   plan      terraform init + plan (read-only)
   create    terraform init + apply in terraform/ (prompts unless -auto-approve)
@@ -45,9 +45,6 @@ run "trigger <command> -h" for command flags.
 
 func main() {
 	if len(os.Args) < 2 {
-		if !isTerminal() && relaunchInTerminal() {
-			return
-		}
 		if !isTerminal() {
 			fmt.Fprint(os.Stderr, usage)
 			os.Exit(2)

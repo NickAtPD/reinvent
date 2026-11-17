@@ -27,10 +27,10 @@ type toolSource struct {
 }
 
 func toolSources(name string) (toolSource, bool) {
-	arch := runtime.GOARCH // arm64 or amd64
+	arch := runtime.GOARCH // amd64 or arm64
 	switch name {
 	case "terraform":
-		file := fmt.Sprintf("terraform_%s_darwin_%s.zip", terraformVersion, arch)
+		file := fmt.Sprintf("terraform_%s_linux_%s.zip", terraformVersion, arch)
 		base := "https://releases.hashicorp.com/terraform/" + terraformVersion + "/"
 		return toolSource{base + file, base + "terraform_" + terraformVersion + "_SHA256SUMS", "terraform"}, true
 	}

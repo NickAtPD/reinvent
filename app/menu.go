@@ -52,7 +52,7 @@ func cmdMenu() error {
 				_, err := ensureSetup(c.root)
 				return err
 			}},
-			{"2", "Check this Mac is ready", "Checks internet and your PagerDuty settings, and downloads Terraform if needed. Changes nothing.", "", false, func() error { return cmdDoctor() }},
+			{"2", "Check this machine is ready", "Checks internet and your PagerDuty settings, and downloads Terraform if needed. Changes nothing.", "", false, func() error { return cmdDoctor() }},
 			{"3", "Preview PagerDuty changes", "Shows what would be created, updated or deleted in PagerDuty. Changes nothing.", "", false, func() error { return cmdPlan(nil) }},
 			{"4", "Create / update PagerDuty objects", "Creates the services, business service, orchestrations and workflows, showing you the list first. Run it again after installing a new version of Reinvent.", "", false, func() error { return cmdCreate(nil) }},
 			{"5", "Open the setup guide", "The few steps done in the PagerDuty web app (Paige on the escalation policy, Slack, status page).", "", false, func() error { return openURL(guideURL) }},
@@ -62,7 +62,7 @@ func cmdMenu() error {
 			{"1", "RUN THE DEMO", "Closes any previous run, then sends 2 change events and 11 alerts over about 30 seconds. Opens real incidents.", "Send the demo events to PagerDuty now?", true, func() error { return cmdRun(nil) }},
 			{"2", "Resolve the demo", "Resolves every alert from demo runs that are still open. Do this when you've finished presenting.", "", false, func() error { return cmdResolve(nil) }},
 			{"3", "Preview demo events", "Prints every event RUN THE DEMO would send. Sends nothing.", "", false, func() error { return cmdRun([]string{"-dry-run", "-no-wait"}) }},
-			{"4", "Export payloads (curl/Postman)", "Writes every event as plain JSON with your real routing keys, plus send.sh and resolve.sh, to a \"Reinvent payloads\" folder on your Desktop.", "", false, func() error { return cmdExport([]string{"-keys", "-open"}) }},
+			{"4", "Export payloads (curl/Postman)", "Writes every event as plain JSON with your real routing keys, plus send.sh and resolve.sh, to ~/.local/share/reinvent/exports, then opens it in Windows Explorer.", "", false, func() error { return cmdExport([]string{"-keys", "-open"}) }},
 			{"5", "Open the demo script", "The story, beat by beat: what to show and what to say.", "", false, func() error { return openURL(storyURL) }},
 		},
 	}
@@ -398,5 +398,5 @@ const storyURL = "https://github.com/" + githubRepo + "/blob/main/story/README.m
 
 func openURL(u string) error {
 	fmt.Println("Opening", u)
-	return exec.Command("open", u).Run()
+	return openTarget(u)
 }

@@ -2,25 +2,24 @@
 
 A PagerDuty demo. A library upgrade makes the `claims-reconciliation` pod leak memory. The pod starves its Kubernetes node, which takes `patient-portal` and `scheduling` down and backs up claims with compliance exposure. Paige finds the change, a human approves, and workflows fix it in-cluster (restart the pod and apply a memory limit).
 
-## Install (Mac)
+## Install (WSL2 on Windows 11)
 
-Open **Terminal** (Cmd+Space, type Terminal), paste this line and press Return:
+This fork targets WSL2 only (tested on the Ubuntu distro it was developed in). You need Go and Git; Terraform is downloaded automatically if it isn't on your PATH.
 
+```bash
+git clone https://github.com/NickAtPD/reinvent.git ~/code/reinvent
+cd ~/code/reinvent
+./trigger
 ```
-curl -fsSL https://raw.githubusercontent.com/justynroberts/reinvent/main/install.sh | sh
-```
 
-Reinvent opens in a Terminal window. Next time, open it from Spotlight (Cmd+Space, type **Reinvent**).
+Keep the clone on the Linux filesystem (for example `~/code`), not under `/mnt/c` or `/mnt/g`: builds are much faster there, and the app stores an API token and Terraform state, which need real Linux file permissions.
 
 **What you need:**
 - A **PagerDuty API key** (PagerDuty → Integrations → API Access Keys). Reinvent asks for it, plus your region and login email, and checks each one.
 
-That's all. Reinvent downloads Terraform itself the first time it needs it. Choose **SETUP → 2 Check this Mac is ready** in the menu to confirm everything is in place. Your settings and state live in `~/Library/Application Support/Reinvent`.
+Choose **SETUP → 2 Check this machine is ready** in the menu to confirm everything is in place. Links open in your Windows browser (via `wslview` from the `wslu` package, falling back to `explorer.exe`). Settings and state for a binary run outside a checkout live in `~/.local/share/reinvent`; in a checkout they stay in the repo.
 
-<details><summary>Prefer to download the file instead?</summary>
-
-Download `Reinvent-macos.zip` from [the latest release](https://github.com/justynroberts/reinvent/releases/latest), unzip it, and move `Reinvent.app` to Applications. The app isn't notarised by Apple, so the first time you open it macOS blocks it. Go to System Settings → Privacy & Security, scroll down, and click **Open Anyway**. The Terminal install above avoids this.
-</details>
+Exports (menu **DEMO → 4**) go to `~/.local/share/reinvent/exports` and open in Explorer. They contain your real routing keys, so they stay on the Linux filesystem with mode 600 on purpose. For Postman, import the placeholder collection `payloads/rendered/reinvent.postman_collection.json` (web Postman works for this) and put your routing keys in a secret environment variable.
 
 ## Layout
 
@@ -32,13 +31,12 @@ Download `Reinvent-macos.zip` from [the latest release](https://github.com/justy
 | [`payloads/`](payloads/) | `scenario.json` (order, timing, shared vars) and the event templates. Edit these, not code. |
 | [`trigger`](trigger) | Developers: run from a checkout. `./trigger` opens the same menu, using the repo's files |
 | [`app/`](app/) | Go source (rebuilt automatically by `./trigger` when it changes) |
-| [`scripts/release.sh`](scripts/release.sh) | Builds, verifies and (with `--publish`) releases `Reinvent.app` |
 | [`runbook/`](runbook/) | The claims-reconciliation runbook to upload for Paige |
 | [`k8s/`](k8s/) | Optional kind cluster and workloads for the remediation beat. Not used by the app for now; see instructions/03 |
 
 ## Quick start
 
-You need Go. `./trigger` builds itself and fetches Terraform.
+You need Go (see Install). `./trigger` builds itself and fetches Terraform.
 
 ```bash
 ./trigger
