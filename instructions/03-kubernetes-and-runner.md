@@ -2,12 +2,32 @@
 
 > **Optional, and done by hand for now.** The Reinvent app doesn't manage the cluster. The demo events work without one; only the live remediation beat needs it.
 
-The workflows act on a real cluster, so you need one. If your sandbox has no Kubernetes cluster, run **kind** on your laptop. The internal page *UA Runner Kind Cluster Management Script* covers the same ground; use it if it has moved on from what's written here.
+The workflows act on a real cluster, so you need one. If your sandbox has no Kubernetes cluster, run **kind** on your WSL2 machine. The internal page *UA Runner Kind Cluster Management Script* covers the same ground; use it if it has moved on from what's written here.
 
 ## 1. Cluster
 
+### Prerequisites (WSL2, Ubuntu)
+
+Use plain Docker Engine, not Docker Desktop. Docker Desktop is a paid product and isn't needed.
+
 ```bash
-# needs plain Docker Engine running in WSL2 (no Docker Desktop); install kind and kubectl from their release binaries
+sudo apt-get update
+sudo apt-get install -y docker.io
+sudo systemctl enable --now docker      # WSL2 needs systemd enabled (default on current Ubuntu)
+sudo usermod -aG docker "$USER"         # then open a new terminal (or: newgrp docker)
+docker run --rm hello-world             # should print "Hello from Docker!"
+```
+
+Install `kind` and `kubectl` from their release binaries into `~/.local/bin` (make sure it is on your `PATH`). Check each download against the checksum published next to it:
+
+- kind: `https://github.com/kubernetes-sigs/kind/releases` → `kind-linux-amd64` and its `.sha256sum`
+- kubectl: `https://dl.k8s.io/release/<version>/bin/linux/amd64/kubectl` and `kubectl.sha256` (current version in `https://dl.k8s.io/release/stable.txt`)
+
+Note that membership in the `docker` group is effectively root on the machine.
+
+### Create the cluster
+
+```bash
 kind create cluster --config k8s/kind-config.yaml
 ```
 
@@ -28,7 +48,7 @@ kubectl -n healthcare logs deploy/claims-reconciliation -f   # watch the "leak"
 | `Pod/claims-toolbox` + SA/Role | kubectl toolbox allowed to `patch` Deployments in `healthcare` only. Used by the remediation pod command. |
 | `k8s/claims-reconciliation-adhoc-pod.yaml` | Replacement pod spec, with a memory limit, for the *Pod Created Adhoc* variant |
 
-The leak is capped so a laptop survives it. Real node pressure and evictions are **not** reproduced; that part of the story comes from the alert payloads. The pod list, delete, recreate and memory-limit patch are all real.
+The leak is capped so a small machine survives it. Real node pressure and evictions are **not** reproduced; that part of the story comes from the alert payloads. The pod list, delete, recreate and memory-limit patch are all real.
 
 ## 3. PD Automation Runner
 
