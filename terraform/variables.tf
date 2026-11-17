@@ -109,5 +109,5 @@ variable "slack_workspace_id" {
 variable "runbook_base_url" {
   description = "Where the per-service runbooks live. The global orchestration sets custom_details.runbook.github to <this>/<service name>.md."
   type        = string
-  default     = "https://github.com/justynroberts/reinvent/blob/main/runbook"
+  default     = "https://github.com/NickAtPD/reinvent/blob/main/runbook"
 }

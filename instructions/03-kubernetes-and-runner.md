@@ -7,7 +7,7 @@ The workflows act on a real cluster, so you need one. If your sandbox has no Kub
 ## 1. Cluster
 
 ```bash
-brew install kind kubectl    # if missing; needs Docker Desktop running
+# needs plain Docker Engine running in WSL2 (no Docker Desktop); install kind and kubectl from their release binaries
 kind create cluster --config k8s/kind-config.yaml
 ```
 

@@ -16,11 +16,14 @@ var version = "dev"
 // workspaceDir is where the distributed app keeps its files and state:
 // .env, Terraform state, and the extracted payloads / Terraform / k8s files.
 func workspaceDir() (string, error) {
+	if x := os.Getenv("XDG_DATA_HOME"); filepath.IsAbs(x) {
+		return filepath.Join(x, "reinvent"), nil
+	}
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, "Library", "Application Support", "Reinvent"), nil
+	return filepath.Join(home, ".local", "share", "reinvent"), nil
 }
 
 // prepareWorkspace extracts the embedded files into dir when the app version
@@ -70,4 +73,4 @@ func useWorkspace() (string, error) {
 }
 
 // githubRepo is where releases, the installer and the setup guide live.
-const githubRepo = "justynroberts/reinvent"
+const githubRepo = "NickAtPD/reinvent"

@@ -8,7 +8,7 @@ cd "$root"
 
 if [ ! -x "$bin" ] || [ -n "$(find app go.mod assets.go -newer "$bin" \( -name '*.go' -o -name go.mod \) 2>/dev/null | head -n 1)" ]; then
   if ! command -v go >/dev/null 2>&1; then
-    echo "Go isn't installed. Fix: brew install go   then run ./trigger again." >&2
+    echo "Go isn't installed. Fix: install Go from https://go.dev/dl (or: sudo apt install golang) then run ./trigger again." >&2
     exit 1
   fi
   echo "Building the app (first run or code changed)..."
